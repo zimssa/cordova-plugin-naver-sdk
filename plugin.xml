@@ -9,6 +9,7 @@
     <preference name="OAUTH_CLIENT_ID"/>
     <preference name="OAUTH_CLIENT_SECRET"/>
     <preference name="OAUTH_CLIENT_NAME"/>
+    <preference name="OAUTH_CLIENT_APP_SCHEME" />
 
     <engines>
         <!-- Requires Gradle building -->
@@ -48,8 +49,6 @@
 
     <!-- ios -->
     <platform name="ios">
-    <preference name="OAUTH_CLIENT_APP_SCHEME" />
-
         <config-file parent="/*" target="config.xml">
             <feature name="NaverCordovaSDK">
                 <param name="ios-package" value="NaverCordovaSDK"/>
