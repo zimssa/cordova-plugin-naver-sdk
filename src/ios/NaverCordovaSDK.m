@@ -29,11 +29,10 @@
     NSString *consumerSecret = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"NaverClientSecret"];
     NSString *appName = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"NaverClientName"];
 
-    [[NaverThirdPartyLoginConnection getSharedInstance] setServiceUrlScheme:serviceUrlScheme];
-    [[NaverThirdPartyLoginConnection getSharedInstance] setConsumerKey:consumerKey];
-    [[NaverThirdPartyLoginConnection getSharedInstance] setConsumerSecret:consumerSecret];
-    [[NaverThirdPartyLoginConnection getSharedInstance] setAppName:appName];
-    
+    [[NaverThirdPartyLoginConnection getSharedInstance] setServiceUrlScheme:serviceUrlScheme]; // 콜백을 받을 URL Scheme 
+    [[NaverThirdPartyLoginConnection getSharedInstance] setConsumerKey:consumerKey]; // 애플리케이션에서 사용하는 클라이언트 아이디 
+    [[NaverThirdPartyLoginConnection getSharedInstance] setConsumerSecret:consumerSecret]; // 애플리케이션에서 사용하는 클라이언트 시크릿
+    [[NaverThirdPartyLoginConnection getSharedInstance] setAppName:appName]; // 애플리케이션 이름
     
 
 }
@@ -82,9 +81,22 @@
  }
 
 
+/**
+ * mkkim : getAccessToken 추가
+ * 토큰 정보를 조회 합니다.
+ *
+ * @param command
+ */
+- (void)getAccessToken:(CDVInvokedUrlCommand *)command {
+    NSString *accessToken = [[NaverThirdPartyLoginConnection getSharedInstance] accessToken];
+    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:accessToken];
+    
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
 
 #pragma mark - NaverThirdPartyLoginConnectionDelegate
-
+// 로그인 성공했을 때
 - (void)oauth20ConnectionDidFinishRequestACTokenWithAuthCode {
     NSLog(@"oauth20ConnectionDidFinishRequestACTokenWithAuthCode");
     NSString *accessToken = [[NaverThirdPartyLoginConnection getSharedInstance] accessToken];
@@ -162,6 +174,7 @@
     self.loginCallbackId = nil;
 }
 
+// 로그인에 실패했을 때
 - (void)oauth20Connection:(NaverThirdPartyLoginConnection *)oauthConnection didFailWithError:(NSError *)error {
     NSLog(@"oauth20Connection");
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:error.description];
@@ -192,65 +205,65 @@
 
 
 
+// mkkim : 페이스북 SDK와 충돌로 사용 안한다.
+// #pragma mark - AppDelegate Overrides
 
-#pragma mark - AppDelegate Overrides
+// @implementation AppDelegate (NaverCordovaSDK)
 
-@implementation AppDelegate (NaverCordovaSDK)
+// void NMethodSwizzle(Class c, SEL originalSelector) {
+//     NSString *selectorString = NSStringFromSelector(originalSelector);
+//     SEL newSelector = NSSelectorFromString([@"swizzled_naver_" stringByAppendingString:selectorString]);
+//     SEL noopSelector = NSSelectorFromString([@"noop_naver_" stringByAppendingString:selectorString]);
+//     Method originalMethod, newMethod, noop;
+//     originalMethod = class_getInstanceMethod(c, originalSelector);
+//     newMethod = class_getInstanceMethod(c, newSelector);
+//     noop = class_getInstanceMethod(c, noopSelector);
+//     if (class_addMethod(c, originalSelector, method_getImplementation(newMethod), method_getTypeEncoding(newMethod))) {
+//         class_replaceMethod(c, newSelector, method_getImplementation(originalMethod) ?: method_getImplementation(noop), method_getTypeEncoding(originalMethod));
+//     } else {
+//         method_exchangeImplementations(originalMethod, newMethod);
+//     }
+// }
 
-void NMethodSwizzle(Class c, SEL originalSelector) {
-    NSString *selectorString = NSStringFromSelector(originalSelector);
-    SEL newSelector = NSSelectorFromString([@"swizzled_naver_" stringByAppendingString:selectorString]);
-    SEL noopSelector = NSSelectorFromString([@"noop_naver_" stringByAppendingString:selectorString]);
-    Method originalMethod, newMethod, noop;
-    originalMethod = class_getInstanceMethod(c, originalSelector);
-    newMethod = class_getInstanceMethod(c, newSelector);
-    noop = class_getInstanceMethod(c, noopSelector);
-    if (class_addMethod(c, originalSelector, method_getImplementation(newMethod), method_getTypeEncoding(newMethod))) {
-        class_replaceMethod(c, newSelector, method_getImplementation(originalMethod) ?: method_getImplementation(noop), method_getTypeEncoding(originalMethod));
-    } else {
-        method_exchangeImplementations(originalMethod, newMethod);
-    }
-}
+// + (void)load
+// {
+//     NMethodSwizzle([self class], @selector(application:openURL:sourceApplication:annotation:));
+// }
 
-+ (void)load
-{
-    NMethodSwizzle([self class], @selector(application:openURL:sourceApplication:annotation:));
-}
-
-// This method is a duplicate of the other openURL method below, except using the newer iOS (9) API.
-- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url options:(NSDictionary<NSString *,id> *)options {
-    if (!url) {
-        return NO;
-    }
-    [[NaverThirdPartyLoginConnection getSharedInstance] application:application openURL:url sourceApplication:[options valueForKey:@"UIApplicationOpenURLOptionsSourceApplicationKey"] annotation:0x0];
+// // This method is a duplicate of the other openURL method below, except using the newer iOS (9) API.
+// - (BOOL)application:(UIApplication *)application openURL:(NSURL *)url options:(NSDictionary<NSString *,id> *)options {
+//     if (!url) {
+//         return NO;
+//     }
+//     [[NaverThirdPartyLoginConnection getSharedInstance] application:application openURL:url sourceApplication:[options valueForKey:@"UIApplicationOpenURLOptionsSourceApplicationKey"] annotation:0x0];
     
-    NSLog(@"Naver(ori) handle url: %@", url);
+//     NSLog(@"Naver(ori) handle url: %@", url);
 
 
-    // Call existing method
-    return [self swizzled_naver_application:application openURL:url sourceApplication:[options valueForKey:@"UIApplicationOpenURLOptionsSourceApplicationKey"] annotation:0x0];
-}
+//     // Call existing method
+//     return [self swizzled_naver_application:application openURL:url sourceApplication:[options valueForKey:@"UIApplicationOpenURLOptionsSourceApplicationKey"] annotation:0x0];
+// }
 
-- (BOOL)noop_naver_application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
-{
-    return NO;
-}
+// - (BOOL)noop_naver_application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+// {
+//     return NO;
+// }
 
-- (BOOL)swizzled_naver_application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
-{
-    if (!url) {
-        return NO;
-    }
+// - (BOOL)swizzled_naver_application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+// {
+//     if (!url) {
+//         return NO;
+//     }
     
     
-    [[NaverThirdPartyLoginConnection getSharedInstance] application:application openURL:url sourceApplication:sourceApplication annotation:annotation];
+//     [[NaverThirdPartyLoginConnection getSharedInstance] application:application openURL:url sourceApplication:sourceApplication annotation:annotation];
 
 
-    if ([url isKindOfClass:NSURL.class] && [sourceApplication isKindOfClass:NSString.class] && annotation) {
-    }
-    NSLog(@"Naver(swizzle) handle url: %@", url);
+//     if ([url isKindOfClass:NSURL.class] && [sourceApplication isKindOfClass:NSString.class] && annotation) {
+//     }
+//     NSLog(@"Naver(swizzle) handle url: %@", url);
     
-    // Call existing method
-    return [self swizzled_naver_application:application openURL:url sourceApplication:sourceApplication annotation:annotation];
-}
-@end
+//     // Call existing method
+//     return [self swizzled_naver_application:application openURL:url sourceApplication:sourceApplication annotation:annotation];
+// }
+// @end

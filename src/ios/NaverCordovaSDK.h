@@ -13,5 +13,7 @@
 
 - (void)unlinkApp:(CDVInvokedUrlCommand *)command;
 
+- (void)getAccessToken:(CDVInvokedUrlCommand *)command;
+
 
 @end
