@@ -9,6 +9,7 @@
     <preference name="OAUTH_CLIENT_ID"/>
     <preference name="OAUTH_CLIENT_SECRET"/>
     <preference name="OAUTH_CLIENT_NAME"/>
+    <!-- nryang : 플러그인 삭제 시 에러가 발생하여 공통 설정 값으로 변경 -->
     <preference name="OAUTH_CLIENT_APP_SCHEME" />
 
     <engines>
